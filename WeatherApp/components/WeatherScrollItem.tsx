@@ -20,38 +20,20 @@ function WeatherScrollItem({weather}:{weather:WeatherForcastItem[]}){
             title: item.date,
             data: item.values
         }));
-};
+    };
 
-const finalSections = transformToSections(weather);
-
-console.log('finalSections: //',finalSections);
-
-    // const tmpOnly =  weather? weather.filter(item => item.category === 'TMP'):[];
+    const finalSections = transformToSections(weather);
 
     const [tmp, setTmp] = useState<WeatherSection[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
 
     const sectionListRef = useRef<SectionList<any>>(null);
     const [activeSectionIndex, setActiveSectionIndex] = useState(0);
     const [isBtnActive, setIsBtnActive] = useState(false);
 
     useEffect(() => {
-        // const weatherSections = tmpOnly.reduce((acc:WeatherSection[], item) => {
-        //     acc.push({
-        //         title: item.date,
-        //         data: item.values
-        //     });
-
-        //     return acc;
-        // }, []);
-
         setTmp(finalSections);
-        setIsLoading(false);
     }, [weather]);
-    
-    if(isLoading){
-        return(<View><Text>로딩중</Text></View>)
-    }
+
 
     const handleScrollToDate = (sectionIndex:any) => {
         setIsBtnActive(true);
@@ -83,25 +65,30 @@ console.log('finalSections: //',finalSections);
     };
 
     const sectionData = (item:TimeItem) => {
+
         return (
-            <View style={{width:50,  margin:5, padding:10, alignItems:'center', justifyContent:'center'}}>
-                    <Text>{Number(item.time)/100}시</Text>
-                    <Text>{item.item['TMP']}˚</Text>
+            <View style={{width:50, margin:5, alignItems:'center', justifyContent:'center'}}>
+                <Text style={{flex:1, textAlign:'center'}}>{Number(item.time)/100}시</Text>
+                <Text style={{flex:1, textAlign:'center'}}>{item.item['TMP']}˚</Text>{/*기온*/}
+                <Text style={{flex:1, textAlign:'center'}}>{item.item['POP']}%</Text>{/*강수확률*/}
+                <Text style={{flex:1, textAlign:'center'}}>{item.item['PCP']==='강수없음'? '-' : item.item['PCP']}</Text>{/*강수량*/}
+                <Text style={{flex:1, textAlign:'center'}}>{item.item['REH']}%</Text>{/*습도*/}
             </View>
         )
     }
 
-    const weatherDate = (date: string, isActive:boolean) => {
+    const weatherDate = (data: WeatherSection, isActive:boolean) => {
 
-        const month = date.substring(4, 6); 
-        const day = date.substring(6, 8);
+        const month = data.title.substring(4, 6); 
+        const day = data.title.substring(6, 8);
 
         if(isActive){
             return(
-                <View style={{flex:1}}>
-                    <Text style={{ flex:1, textAlign:'center', justifyContent:'center', fontWeight:'bold'}}>{month} / {day}</Text>
-                    <View style={{flex:2, backgroundColor:'white', width:120, borderRightWidth:1.5, borderLeftWidth:1.5, borderColor:'#DBEA8D'}}>
-                        <Text style={{textAlign:'center', justifyContent:'center', }}></Text>
+                <View style={{flex:1, justifyContent:'center'}}>
+                    <Text style={{ flex:1, textAlign:'center', fontWeight:'bold'}}>{month} / {day}</Text>
+                    <View style={{flex:2, backgroundColor:'white', width:120, borderRightWidth:1.5, borderLeftWidth:1.5, borderColor:'#DBEA8D', flexDirection:'row', alignItems:'center'}}>
+                        <Text style={{flex:1,textAlign:'center', color:'blue'}}>최저</Text>
+                        <Text style={{flex:1,textAlign:'center', color:'red'}}>최고</Text>
                     </View>
                     
                 </View>
@@ -115,7 +102,7 @@ console.log('finalSections: //',finalSections);
 
     return(
         <View style={{flex:1, backgroundColor:'white', borderTopLeftRadius:15, borderTopRightRadius:15,padding:10}}>
-            <View style={{}}>
+            <View style={{marginBottom:20}}>
                 <Text style={{fontSize:18, fontWeight:'bold', margin: 10}}>시간별 예보</Text>
                 <View style={{height:90,  flexDirection:'row',}}>
                     <ScrollView horizontal={true} style={{}} showsHorizontalScrollIndicator={false}>
@@ -128,31 +115,59 @@ console.log('finalSections: //',finalSections);
                                 ]}
                                 onPress={() => handleScrollToDate(index)}
                             >
-                                {weatherDate(section.title, activeSectionIndex === index)}
+                                {weatherDate(section, activeSectionIndex === index)}
                             </TouchableOpacity>
                         ))}
                     </ScrollView>
                 </View>
-                <View style={{height:100, backgroundColor:'#DBEA8D', padding: 10, borderRadius:10, justifyContent:'center'}}>
+                <View style={{height:250, borderColor:'#DBEA8D', borderTopWidth:2,   padding: 10, flexDirection:'row'}}>
+                    <View style={{margin:5, alignItems:'center', justifyContent:'center'}}>
+                        <Text style={{flex:1, textAlign:'center', fontWeight:'bold'}}>시간</Text>
+                        <Text style={{flex:1, textAlign:'center', fontWeight:'bold'}}>기온</Text>{/*기온*/}
+                        <Text style={{flex:1, textAlign:'center', fontWeight:'bold'}}>강수확률</Text>{/*강수확률*/}
+                        <Text style={{flex:1, textAlign:'center', fontWeight:'bold'}}>강수량</Text>{/*강수량*/}
+                        <Text style={{flex:1, textAlign:'center', fontWeight:'bold'}}>습도</Text>{/*습도*/}
+                    </View>
                     <SectionList 
-                            ref={sectionListRef} 
-                            sections={tmp} 
-                            renderItem={({item}) => sectionData(item)}
-                            keyExtractor={(item, index) => `${item.time}-${index}`}
-                            horizontal={true}
-                            nestedScrollEnabled={true}
-                            showsHorizontalScrollIndicator={false}
-                            onViewableItemsChanged={onViewableItemsChanged}
-                            viewabilityConfig={{
-                            itemVisiblePercentThreshold: 50, // 아이템이 50% 이상 보일 때 이벤트를 발생
-                            }}
-                            onMomentumScrollEnd={()=>setIsBtnActive(false)}
+                        ref={sectionListRef} 
+                        sections={tmp} 
+                        renderItem={({item}) => sectionData(item)}
+                        keyExtractor={(item, index) => `${item.time}-${index}`}
+                        horizontal={true}
+                        nestedScrollEnabled={true}
+                        showsHorizontalScrollIndicator={false}
+                        onViewableItemsChanged={onViewableItemsChanged}
+                        viewabilityConfig={{
+                        itemVisiblePercentThreshold: 50, // 아이템이 50% 이상 보일 때 이벤트를 발생
+                        }}
+                        onMomentumScrollEnd={()=>setIsBtnActive(false)}
                     />
                 </View>
             </View>
-            <View style={{height:600, backgroundColor:'#cad48eff', borderRadius:10}}>
-                    
+            <View style={{marginBottom:20}}>
+                <Text style={{fontSize:18, fontWeight:'bold', margin: 10,}}>일별예보</Text>
+                <View style={{height:300, borderColor:'#DBEA8D', borderTopWidth:2,  borderBottomWidth:0}}>
+                        
+                </View>
             </View>
+            <View style={{marginBottom:20}}>
+                <Text style={{fontSize:18, fontWeight:'bold', margin: 10}}>대기질 정보</Text>
+                <View style={{height:100, borderColor:'#DBEA8D', borderTopWidth:2,  borderBottomWidth:0,}}>
+                        
+                </View>
+            </View> 
+            <View style={{marginBottom:20}}>
+                <Text style={{fontSize:18, fontWeight:'bold', margin: 10}}>자외선 정보</Text>
+                <View style={{height:100, borderColor:'#DBEA8D', borderTopWidth:2,  borderBottomWidth:0,}}>
+                        
+                </View>
+            </View> 
+            <View>
+                <Text style={{fontSize:18, fontWeight:'bold', margin: 10}}>영상</Text>
+                <View style={{height:350, borderColor:'#DBEA8D', borderTopWidth:2,  borderBottomWidth:0,}}>
+                        
+                </View>
+            </View> 
         </View>
     )
 }

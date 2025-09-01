@@ -30,9 +30,6 @@ function CurrentWeatherItem({location, activeItemId, isScrollHalf ,setForcast}:{
     }, []);
 
     const currentT1H = weather? weather.currentWeather.item['T1H'] : 0
-    // .filter(item => item.category === 'T1H')[0].values[0].value : 0; //기온
-
-    // const currentT1H = weather? weather.currentWeather.filter(item => item.category === 'T1H')[0].values[0].value : 0; //기온
     const currentRN1 = weather? weather.currentWeather.item['RN1'] : 0
     const currentREH = weather? weather.currentWeather.item['REH'] : 0
     const currentWSD = weather? weather.currentWeather.item['WSD'] : 0
@@ -71,7 +68,7 @@ function CurrentWeatherItem({location, activeItemId, isScrollHalf ,setForcast}:{
                     <Text>{currentRN1}mm</Text>
                     <Text>1시간 강수량</Text>
                 </View>
-                <View style={styles.weatherBottomContent}>
+                <View style={[styles.weatherBottomContent, {borderRightWidth:0}]}>
                     <Text>{currentWSD}m/s</Text>
                     <Text>풍속</Text>
                 </View>

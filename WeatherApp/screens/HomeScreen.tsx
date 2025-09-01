@@ -18,9 +18,11 @@ function HomeScreen({navigation}: {navigation: any}) {
 
     const [currentIndex, setCurrentIndex] = useState(0); // 현재 페이지 인덱스
     const scrollX = useRef(new Animated.Value(0)).current;
-    const { height, width } = Dimensions.get('window');
+    const { width } = Dimensions.get('window');
     const [isScrollHalf, setScrollHalf] = useState(false);
-    const [offset, setoffset] = useState(0); // 현재 페이지 인덱스
+    const [scrollPercentage, setScrollPercentage] = useState(0);
+    const [isScrollBtn, setScrollBtn] = useState(false);
+    const [offset, setOffset] = useState(0); // 현재 페이지 인덱스
 
     useEffect(() => {
         if(locationError === '')
@@ -52,18 +54,21 @@ function HomeScreen({navigation}: {navigation: any}) {
 
         // 스크롤 가능한 공간이 0보다 클 때만 계산
         if (scrollableHeight > 0) {
-            const scrollPercentage = (scrollOffset / scrollableHeight) * 100;
+            const scrollPercent = (scrollOffset / scrollableHeight) * 100;
+            setScrollPercentage(scrollPercent)
+            console.log('scrollPercent: ',scrollPercent);
 
             if(isScrollHalf){
-                if(scrollPercentage == 0){
+                if(scrollPercent == 0){
                     setScrollHalf(false);
-                    setoffset(0);
+                    setOffset(0);
                 }
             }
             else{
-                if(scrollPercentage > 60){
+                if(scrollPercent > 15){
                     setScrollHalf(true);
-                    setoffset(40);
+                    if(!isScrollBtn)
+                        setOffset(40);
                 }
             }
         }
@@ -132,33 +137,53 @@ function HomeScreen({navigation}: {navigation: any}) {
                     </TouchableOpacity>
                 </View>
             </View>
-            <View style={{flex:3, margin: 20, marginTop:15,  }}>
+            <View style={{flex:3, margin: 20, marginTop:15, marginBottom:0, }}>
                 {isScrollHalf? currentWeatherScreen(): null}
-               <ScrollView style={{flex:1, }} showsVerticalScrollIndicator={false} onScroll={onScrollViewScroll} contentOffset={{x:0, y:offset}}>
+               <ScrollView style={{flex:1, borderTopLeftRadius:15, borderTopRightRadius:15, paddingTop:10}} showsVerticalScrollIndicator={false} onScroll={onScrollViewScroll} contentOffset={{x:0, y:offset}} onMomentumScrollEnd={()=>setScrollBtn(false)}>
                     {!isScrollHalf? currentWeatherScreen(): <View style={{height:160}}></View>}
-                    <View style={{height:700}}>
+                    <View style={{}}>
                         <WeatherScrollItem weather={forcast}/>
                     </View>
                 </ScrollView>
             </View>
             <Toast/>
+            <View style={{flex:0.3, backgroundColor:'#e4e4dfff',flexDirection:'row'}}>
+                <TouchableOpacity style={ isScrollHalf && scrollPercentage < 70 ? styles.categoryBtnActive :styles.categoryBtn} onPress={()=>{setOffset(130); setScrollBtn(true);}}>
+                    <Icon name={'sunny'} color={isScrollHalf && scrollPercentage < 70 ? '#6e7a29ff' : 'black'} size={20}/>
+                    <Text style={{fontWeight:'bold', color: isScrollHalf && scrollPercentage < 70 ? '#6e7a29ff' : 'black'}}>예보</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={scrollPercentage >=70 && scrollPercentage < 95 ? styles.categoryBtnActive : styles.categoryBtn} onPress={()=>{setOffset(930); setScrollBtn(true);}}>
+                    <Icon name={'leaf'} color={scrollPercentage >=70 && scrollPercentage < 95 ? '#6e7a29ff' : 'black' } size={20} />
+                    <Text style={{fontWeight:'bold',color: scrollPercentage >=70 && scrollPercentage < 95 ? '#6e7a29ff' : 'black'}}>대기질</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={scrollPercentage >=95 ? styles.categoryBtnActive : styles.categoryBtn} onPress={()=>{setOffset(1500); setScrollBtn(true);}}>
+                    <Icon name={'play'} color={scrollPercentage >=95 ?'#6e7a29ff' : 'black'} size={20} />
+                    <Text style={{fontWeight:'bold', color:scrollPercentage >=95 ?'#6e7a29ff' : 'black'}}>영상</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     )
 }
 
 const styles = StyleSheet.create({
-  indicatorContainer: {
-    flexDirection: 'row',
-    position: 'absolute',
-    bottom: 20,
-    alignSelf: 'center',
-  },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 4,
-    marginHorizontal: 4,
-  },
+    indicatorContainer: {
+        flexDirection: 'row',
+        position: 'absolute',
+        bottom: 20,
+        alignSelf: 'center',
+    },
+    dot: {
+        width: 6,
+        height: 6,
+        borderRadius: 4,
+        marginHorizontal: 4,
+    },
+    categoryBtn:{
+        flex:1,justifyContent:'center', alignItems:'center'
+    },
+    categoryBtnActive:{
+        flex:1,justifyContent:'center', alignItems:'center', backgroundColor:'#cad48eff',borderRadius:5,margin:3
+    }
 });
 
 export default HomeScreen;
