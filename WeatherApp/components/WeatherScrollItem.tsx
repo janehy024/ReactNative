@@ -1,13 +1,13 @@
 import React, { useEffect, useState,useRef, useCallback } from "react";
-import { View, Text, FlatList, ScrollView, Dimensions, StyleSheet, Button, SectionList ,TouchableOpacity} from 'react-native';
-import { LocalItem, LocationType, WeatherForcastItem, CategoryForcastItem } from '../types/WetherItem';
+import { View, Text, FlatList, ScrollView, Dimensions, StyleSheet, Button, SectionList ,TouchableOpacity, ViewToken} from 'react-native';
+import { LocalItem, LocationType, TimeItem, WeatherForcastItem } from '../types/WetherItem';
 import { useTheme } from "../hooks/useTheme";
 import { useWeather } from "../hooks/useWeather";
 // import { ScrollView } from "react-native/types_generated/index";
 
 interface WeatherSection {
   title: string;
-  data: CategoryForcastItem[];
+  data: TimeItem[]
 }
 
 function WeatherScrollItem({weather}:{weather:WeatherForcastItem[]}){
@@ -15,25 +15,37 @@ function WeatherScrollItem({weather}:{weather:WeatherForcastItem[]}){
     if(!weather)
         return;
 
-    const tmpOnly =  weather? weather.filter(item => item.category === 'TMP'):[];
+    const transformToSections = (items: WeatherForcastItem[]): WeatherSection[] => {
+        return items.map(item => ({
+            title: item.date,
+            data: item.values
+        }));
+};
+
+const finalSections = transformToSections(weather);
+
+console.log('finalSections: //',finalSections);
+
+    // const tmpOnly =  weather? weather.filter(item => item.category === 'TMP'):[];
 
     const [tmp, setTmp] = useState<WeatherSection[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const sectionListRef = useRef<SectionList<any>>(null);
     const [activeSectionIndex, setActiveSectionIndex] = useState(0);
+    const [isBtnActive, setIsBtnActive] = useState(false);
 
     useEffect(() => {
-        const weatherSections = tmpOnly.reduce((acc:WeatherSection[], item) => {
-            acc.push({
-                title: item.date,
-                data: item.values
-            });
+        // const weatherSections = tmpOnly.reduce((acc:WeatherSection[], item) => {
+        //     acc.push({
+        //         title: item.date,
+        //         data: item.values
+        //     });
 
-            return acc;
-        }, []);
+        //     return acc;
+        // }, []);
 
-        setTmp(weatherSections);
+        setTmp(finalSections);
         setIsLoading(false);
     }, [weather]);
     
@@ -42,7 +54,9 @@ function WeatherScrollItem({weather}:{weather:WeatherForcastItem[]}){
     }
 
     const handleScrollToDate = (sectionIndex:any) => {
+        setIsBtnActive(true);
         setActiveSectionIndex(sectionIndex);
+
         if (sectionListRef.current) {
             sectionListRef.current.scrollToLocation({
             sectionIndex: sectionIndex,
@@ -52,7 +66,10 @@ function WeatherScrollItem({weather}:{weather:WeatherForcastItem[]}){
         }
     };
 
-    const onViewableItemsChanged = ({ viewableItems }) => {
+    const onViewableItemsChanged = ({ viewableItems }: { viewableItems: ViewToken[] }) => {
+        if(isBtnActive)
+            return;
+
         if (viewableItems.length > 0) {
             const firstVisibleSection = viewableItems[0].section;
             const index = tmp.findIndex(
@@ -65,12 +82,34 @@ function WeatherScrollItem({weather}:{weather:WeatherForcastItem[]}){
         }
     };
 
-    const sectionData = (item:CategoryForcastItem) => {
+    const sectionData = (item:TimeItem) => {
         return (
             <View style={{width:50,  margin:5, padding:10, alignItems:'center', justifyContent:'center'}}>
-                    <Text>{item.time/100}시</Text>
-                    <Text>{item.value}˚</Text>
+                    <Text>{Number(item.time)/100}시</Text>
+                    <Text>{item.item['TMP']}˚</Text>
             </View>
+        )
+    }
+
+    const weatherDate = (date: string, isActive:boolean) => {
+
+        const month = date.substring(4, 6); 
+        const day = date.substring(6, 8);
+
+        if(isActive){
+            return(
+                <View style={{flex:1}}>
+                    <Text style={{ flex:1, textAlign:'center', justifyContent:'center', fontWeight:'bold'}}>{month} / {day}</Text>
+                    <View style={{flex:2, backgroundColor:'white', width:120, borderRightWidth:1.5, borderLeftWidth:1.5, borderColor:'#DBEA8D'}}>
+                        <Text style={{textAlign:'center', justifyContent:'center', }}></Text>
+                    </View>
+                    
+                </View>
+            )
+        }
+
+        return(
+            <Text style={{fontWeight:'400'}}>{month} / {day}</Text>
         )
     }
 
@@ -78,7 +117,7 @@ function WeatherScrollItem({weather}:{weather:WeatherForcastItem[]}){
         <View style={{flex:1, backgroundColor:'white', borderTopLeftRadius:15, borderTopRightRadius:15,padding:10}}>
             <View style={{}}>
                 <Text style={{fontSize:18, fontWeight:'bold', margin: 10}}>시간별 예보</Text>
-                <View style={{height:60, alignItems:'flex-end', flexDirection:'row'}}>
+                <View style={{height:90,  flexDirection:'row',}}>
                     <ScrollView horizontal={true} style={{}} showsHorizontalScrollIndicator={false}>
                         {tmp.map((section, index) => (
                             <TouchableOpacity
@@ -89,7 +128,7 @@ function WeatherScrollItem({weather}:{weather:WeatherForcastItem[]}){
                                 ]}
                                 onPress={() => handleScrollToDate(index)}
                             >
-                                <Text style={styles.buttonText}>{section.title}</Text>
+                                {weatherDate(section.title, activeSectionIndex === index)}
                             </TouchableOpacity>
                         ))}
                     </ScrollView>
@@ -107,6 +146,7 @@ function WeatherScrollItem({weather}:{weather:WeatherForcastItem[]}){
                             viewabilityConfig={{
                             itemVisiblePercentThreshold: 50, // 아이템이 50% 이상 보일 때 이벤트를 발생
                             }}
+                            onMomentumScrollEnd={()=>setIsBtnActive(false)}
                     />
                 </View>
             </View>
@@ -126,12 +166,20 @@ const styles = StyleSheet.create({
     },
     button: {
         padding: 10,
-        borderRadius: 5,
-        height:50,
+        justifyContent:'center',
+        borderTopLeftRadius:7,
+        borderTopRightRadius:7,
+        height:80,
         backgroundColor: '#ccc',
+        margin:0.5
     },
     activeButton: {
-        backgroundColor: '#cad48eff',
+        backgroundColor: '#DBEA8D',
+        justifyContent:'flex-start',
+        width:120,
+        paddingTop:7,
+        padding:0
+
     },
     buttonText: {
         color: '#000',

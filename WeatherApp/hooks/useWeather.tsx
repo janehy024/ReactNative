@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, ReactNode, useContext } from 'react';
+import { createContext, useState, useEffect, ReactNode, useContext, } from 'react';
 import { useLocation } from './useLocation'; 
 import ConverterToXY from '../utils/ConvertToXY';
 import {WeatherAPI} from '../utils/WeatherApi';

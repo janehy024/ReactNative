@@ -1,12 +1,10 @@
 import React, { useContext, useEffect, useState, useRef  } from "react";
-import { View, Text, StyleSheet} from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator} from 'react-native';
 import { useTheme } from "../hooks/useTheme";
-import { LocalItem, LocationType, WeatherForcastItem } from '../types/WetherItem';
+import { LocalItem, LocationType, TimeItem,WeatherForcastItem} from '../types/WetherItem';
 import { useWeather } from "../hooks/useWeather";
 
-function CurrentWeatherItem({location, activeItemId, isScrollHalf ,setForcast}:{location: LocationType, activeItemId:number, isScrollHalf:boolean, setForcast:React.Dispatch<React.SetStateAction<WeatherForcastItem[]>>}){
-
-    console.log(location.id === activeItemId);
+function CurrentWeatherItem({location, activeItemId, isScrollHalf ,setForcast}:{location: LocationType, activeItemId:number, isScrollHalf:boolean, setForcast:(forcast:WeatherForcastItem[]) => void}){
 
     const { themeColor } = useTheme();
     const [ weather, setWeather]  = useState<LocalItem>();
@@ -16,7 +14,6 @@ function CurrentWeatherItem({location, activeItemId, isScrollHalf ,setForcast}:{
         if(weather)
         {
             setForcast(weather.hourlyWeather);
-            console.log('값: ', weather.hourlyWeather)
         }
     }
 
@@ -32,10 +29,21 @@ function CurrentWeatherItem({location, activeItemId, isScrollHalf ,setForcast}:{
         GetWeather();
     }, []);
 
-    const currentT1H = weather? weather.currentWeather.filter(item => item.category === 'T1H')[0].values[0].value : 0; //기온
-    const currentRN1 = weather? weather.currentWeather.filter(item => item.category === 'RN1')[0].values[0].value : 0; //1시간 강수량
-    const currentREH = weather? weather.currentWeather.filter(item => item.category === 'REH')[0].values[0].value : 0; //습도
-    const currentWSD = weather? weather.currentWeather.filter(item => item.category === 'WSD')[0].values[0].value : 0; //풍속
+    const currentT1H = weather? weather.currentWeather.item['T1H'] : 0
+    // .filter(item => item.category === 'T1H')[0].values[0].value : 0; //기온
+
+    // const currentT1H = weather? weather.currentWeather.filter(item => item.category === 'T1H')[0].values[0].value : 0; //기온
+    const currentRN1 = weather? weather.currentWeather.item['RN1'] : 0
+    const currentREH = weather? weather.currentWeather.item['REH'] : 0
+    const currentWSD = weather? weather.currentWeather.item['WSD'] : 0
+
+    if(isLoading){
+        return(
+            <View style={{flex:1, backgroundColor: themeColor.background, justifyContent: 'center', alignItems:'center'}}>
+                <ActivityIndicator style={{alignItems:'center'}} size="small" color="#cad48eff"/>
+            </View>
+        )
+    }
 
     if(isScrollHalf){
         return(
@@ -82,4 +90,6 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CurrentWeatherItem;
+const CurrentWeather = React.memo(CurrentWeatherItem);
+
+export default CurrentWeather;

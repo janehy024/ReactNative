@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { HourlyWeatherItem, CurrentyWeatherItem, WeatherForcastItem,CategoryForcastItem  } from '../types/WetherItem';
+import { WeatherForcastItem,TimeItem  } from '../types/WetherItem';
 import { Alert } from 'react-native';
 
 export function WeatherAPI (dx: number, dy: number) {
@@ -69,57 +69,33 @@ export function WeatherAPI (dx: number, dy: number) {
             const response = await axios.get(url);
             const data = response.data.response.body.items.item;
 
-            // 1단계: 날짜(baseDate)와 카테고리(category)별로 데이터를 그룹화
-            const groupedData = data.reduce((acc, item) => {
-                const { baseDate, category, baseTime, obsrValue } = item;
+            console.log('data',data);
 
-                // 날짜별 그룹 생성
-                if (!acc[baseDate]) {
-                    acc[baseDate] = {};
-                }
-                // 카테고리별 그룹 생성
-                if (!acc[baseDate][category]) {
-                    acc[baseDate][category] = [];
+            const transformToTimeItem = (data: any[]): TimeItem => {
+                if (data.length === 0) {
+                    return { time: '', item: {} };
                 }
 
-                // CategoryForcastItem 객체를 만들어서 추가
-                acc[baseDate][category].push({
-                    time: Number(baseTime),
-                    value: obsrValue,
+                // 1. time 값 추출 (모든 항목의 baseTime은 동일)
+                const timeValue = data[0].baseTime;
+                
+                // 2. item 객체에 모든 카테고리/값 쌍을 담습니다.
+                const itemObject = {};
+                data.forEach(item => {
+                    itemObject[item.category] = item.obsrValue; // 동적 키를 사용하여 값을 추가
                 });
-                return acc;
-            }, {});
 
-            // 2단계: 그룹화된 데이터를 최종 배열로 변환
-            const finalResult: WeatherForcastItem[] = [];
+                // 3. 최종 TimeItem 객체 반환
+                return {
+                    time: timeValue,
+                    item: itemObject,
+                };
+            };
+            const finalData = transformToTimeItem(data);
 
-            Object.entries(groupedData).forEach(([date, categories]) => {
-                Object.entries(categories).forEach(([category, values]) => {
-                    finalResult.push({
-                        date: date,
-                        category: category,
-                        values: values as CategoryForcastItem[],
-                    });
-                });
-            });
-            console.log('current finalResult: ', finalResult);
+            console.log('current finalData',finalData);
 
-            return finalResult;
-
-            // console.log('response: ',data);
-
-            // const temperature = data.find(item => (item.category === 'T1H'));
-
-            // if(temperature){
-            //     const cur: weatherItem = {type:0, time: Number(temperature.baseTime), tempValue: temperature.obsrValue}
-
-            //     console.log('cur: ',cur.tempValue);
-
-            //     return cur;
-            // }
-
-            // return weatherData;
-            // console.log('weatherData: ',weatherData);
+            return finalData;
 
         }catch(err){
 
@@ -136,48 +112,50 @@ export function WeatherAPI (dx: number, dy: number) {
             const response = await axios.get(url);
             const data = response.data.response.body.items.item;
 
-            const groupedData = data.reduce((acc, item) => {
-                const { fcstDate, category, fcstTime, fcstValue } = item;
+            const transformForecastData = (data: any[]): WeatherForcastItem[] => {
+                // A temporary object to group data first by date, then by time.
+                const groupedByDate = {};
 
-                // 날짜별 그룹 생성
-                if (!acc[fcstDate]) {
-                    acc[fcstDate] = {};
-                }
-                // 카테고리별 그룹 생성
-                if (!acc[fcstDate][category]) {
-                    acc[fcstDate][category] = [];
-                }
+                data.forEach(item => {
+                    const { fcstDate, fcstTime, category, fcstValue } = item;
 
-                // CategoryForcastItem 객체를 만들어서 추가
-                acc[fcstDate][category].push({
-                    time: Number(fcstTime),
-                    value: fcstValue,
+                    // Create a new date group if it doesn't exist.
+                    if (!groupedByDate[fcstDate]) {
+                    groupedByDate[fcstDate] = {};
+                    }
+
+                    // Create a new time group within the date group if it doesn't exist.
+                    if (!groupedByDate[fcstDate][fcstTime]) {
+                    groupedByDate[fcstDate][fcstTime] = {};
+                    }
+
+                    // Add the category and value to the appropriate time group.
+                    groupedByDate[fcstDate][fcstTime][category] = fcstValue;
                 });
-                return acc;
-            }, {});
 
-            // 2단계: 그룹화된 데이터를 WeatherForcatItem 배열로 변환
-            const finalResult: WeatherForcastItem[] = [];
-
-            Object.entries(groupedData).forEach(([date, categories]) => {
-                Object.entries(categories).forEach(([category, values]) => {
-                    finalResult.push({
-                        date: date,
-                        category: category,
-                        values: values as CategoryForcastItem[],
+                // Convert the grouped object into the final array of WeatherForcastItem.
+                const finalData: WeatherForcastItem[] = Object.keys(groupedByDate).map(dateKey => {
+                    const timeValues: TimeItem[] = Object.keys(groupedByDate[dateKey]).map(timeKey => {
+                    return {
+                        time: timeKey,
+                        item: groupedByDate[dateKey][timeKey],
+                    };
                     });
+
+                    return {
+                    date: dateKey,
+                    values: timeValues,
+                    };
                 });
-            });
-            console.log('hourly finalResult: ', finalResult);
 
-            // const temperatures = data.filter(item => (item.category === 'TMP' && !((item.fcstTime / 100 * 60) < currentMinute && (item.fcstDate === baseDate))));
-            // const hourly:weatherItem[] = temperatures.map((item) =>
-            //     ({ type: 1, time: item.fcstTime, tempValue: item.fcstValue})
-            //     // (console.log(index + '번 temperatures: '+item.category + ' ,' + item.fcstValue + ' ,' + item.fcstTime))
-            // )
-            // console.log('hourly: ',hourly);
+                return finalData;
+                };
 
-            return finalResult;
+            const finalData = transformForecastData(data);
+
+            console.log('hourly finalData',finalData);
+
+            return finalData;
 
         } catch (e) {
             console.error(e);
@@ -188,13 +166,7 @@ export function WeatherAPI (dx: number, dy: number) {
         const hourly = await hourlyWeather();
         const current = await currentWeather();        
 
-        // if(current && hourly){
-        //     const value: weatherItem[] = [current, ...hourly];
-        //     return value;
-        // }
-
-        // else
-            return {current, hourly};
+        return {current, hourly};
     }
 
     return dayWeather();

@@ -1,13 +1,11 @@
-export interface WeatherForcastItem{
-    // [x: string]: any
-    date: string,
-    category: string,
-    values: CategoryForcastItem[]
+export interface TimeItem{
+    time: string,
+    item: {[key: string]: string}
 }
 
-export interface CategoryForcastItem{
-    time:number,
-    value: string
+export interface WeatherForcastItem{
+    date: string,
+    values: TimeItem[]
 }
 
 export interface LocationType {
@@ -22,7 +20,7 @@ export interface LocationType {
 
 export interface LocalItem {
     location: LocationType,
-    currentWeather: WeatherForcastItem[],
+    currentWeather: TimeItem,
     hourlyWeather: WeatherForcastItem[],
     min: string,
     max: string,

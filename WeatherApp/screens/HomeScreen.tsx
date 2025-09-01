@@ -1,11 +1,11 @@
-import React, { useContext, useEffect, useState, useRef  } from "react";
+import React, { useContext, useEffect, useState, useRef, useCallback  } from "react";
 import { View, Text, Button, StyleSheet, FlatList, TouchableOpacity, Alert, TextInput, Animated, ActivityIndicator, ViewToken, ScrollView, Dimensions } from 'react-native';
 import { useTheme } from "../hooks/useTheme";
 import { useLocation } from "../hooks/useLocation";
 import Toast from "react-native-toast-message";
 import { NetErrorToast } from "../components/ErrorToast";
 import Icon from "react-native-vector-icons/Ionicons";
-import { LocalItem, LocationType, WeatherForcastItem } from '../types/WetherItem';
+import { LocalItem, LocationType, WeatherForcastItem} from '../types/WetherItem';
 import { useWeather } from "../hooks/useWeather";
 import CurrentWeatherItem from "../components/CurrentWeatherItem";
 import WeatherScrollItem from "../components/WeatherScrollItem";
@@ -29,6 +29,13 @@ function HomeScreen({navigation}: {navigation: any}) {
         NetErrorToast(locationError);
         
     },[locationError]);
+
+    const setForcastInChild = useCallback((forcast:WeatherForcastItem[]) => {
+        if(locationLoading)
+            return;
+
+        setForcast(forcast);
+    },[locationLoading]);
 
   // 스크롤 위치를 감지하여 현재 페이지 인덱스를 업데이트
     const onFlastListScroll = Animated.event(
@@ -79,13 +86,13 @@ function HomeScreen({navigation}: {navigation: any}) {
     };
 
     const currentWeatherScreen = () => {
-        const currenHeight = isScrollHalf ? 130 : 270;
+        const currenHeight = isScrollHalf ? 130 : 300;
 
         return(
             <View style={{height:currenHeight, justifyContent:'center', alignItems:'center'}}>
                 <FlatList 
                     data={allLocations}
-                    renderItem={({item}) => <CurrentWeatherItem location={item} activeItemId={currentIndex} isScrollHalf={isScrollHalf} setForcast={setForcast}/>}
+                    renderItem={({item}) => <CurrentWeatherItem location={item} activeItemId={currentIndex} isScrollHalf={isScrollHalf} setForcast={setForcastInChild}/>}
                     horizontal={true}
                     onScroll={onFlastListScroll}
                     pagingEnabled={true}
