@@ -4,10 +4,16 @@ import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface ThemeColorType {
-    background: string;
+    mainBackground: string;
     text: string;
     statusbar: string;
-    bottomModal: string;
+    modalBackground: string;
+    madalButtonColor: string;
+    modalIconColor: string;
+    modalBorderColor: string;
+    tabBarColor: string;
+    searchBarColor:string;
+    forcastDayBtnColor:string;
 }
 
 // Context가 제공할 값의 타입을 정의합니다.
@@ -35,10 +41,16 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     }, [themeMode, systemColorScheme]);
 
     const themeColor: ThemeColorType = {
-        background: isDarkMode? '#1f2018ff' : '#EDEFE3' ,
+        mainBackground: isDarkMode? '#000000' : '#fcfcfcff' ,
         text: isDarkMode? 'white' : 'black',
         statusbar: isDarkMode? 'light-content' : 'dark-content',
-        bottomModal: isDarkMode? 'black' : 'white',
+        modalBackground: isDarkMode? '#1e222cff' : '#f8f9fa',
+        madalButtonColor: isDarkMode? 'black' : 'white',
+        modalIconColor: isDarkMode ? '#e0e0e0ff' : '#666666',
+        modalBorderColor: isDarkMode ? '#2e3341ff' : '#e0e0e0ff',
+        tabBarColor: isDarkMode ? '#2e3341ff' : '#35568C',
+        searchBarColor:isDarkMode ? '#646464ff':'#ecececff',
+        forcastDayBtnColor: isDarkMode? 'black' : '#d8d8d8ff'
     }
 
     const setAppTheme = useCallback(async(mode:string) => {

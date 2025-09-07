@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useModal } from "../hooks/useModal";
 import { useTheme } from "../hooks/useTheme";
 import Icon from "react-native-vector-icons/Ionicons";
+import ThemeModal from '../components/ThemeModal';
 
 function SettingScreen() {
 
@@ -12,41 +13,8 @@ function SettingScreen() {
     const { themeMode, themeColor, setAppTheme } = useTheme();
 
     const navigation = useNavigation();
-
-    const BottomModal = () => {
-    
-        const onAppTheme = (mode:string) => {
-            setAppTheme(mode);
-            modalClose();
-        }
-    
-        return (
-            <Modal animationType="slide" transparent={true} visible={isModalVisible} onRequestClose={() => {modalClose()}}>
-                <View style={styles.centeredView}>
-                    <View style={[styles.modalView, {backgroundColor:themeColor.bottomModal}]}>
-    
-                        <TouchableOpacity onPress={() => { onAppTheme('다크 모드') }}>
-                            <Text style={[styles.modalText, {color:themeColor.text}]}>다크 모드</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => { onAppTheme('라이트 모드') }}>
-                            <Text style={[styles.modalText, {color:themeColor.text}]}>라이트 모드</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => { onAppTheme('시스템 설정 사용') }}>
-                            <Text style={[styles.modalText, {color:themeColor.text}]}>시스템 설정 사용</Text>
-                        </TouchableOpacity>
-    
-                        {/* 모달 닫기 버튼 */}
-                        <TouchableOpacity style={{width:'100%'}} onPress={() => modalClose()}>
-                            <Text style={styles.closeText}>닫기</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
-        );
-    };
-
     return(
-        <View style={{flex:1, backgroundColor: themeColor.background, paddingTop:10 }}>
+        <View style={{flex:1, backgroundColor: themeColor.mainBackground, paddingTop:10 }}>
             <View style={{flex: 0.2, alignItems:'flex-start', justifyContent:'flex-end', marginLeft:25,}}>
                 <TouchableOpacity style={{ alignItems: 'center', padding:5, paddingLeft:0}} onPress={() => navigation.goBack()}>
                     <Icon name={'chevron-back'} color={themeColor.text} size={20} />
@@ -65,7 +33,7 @@ function SettingScreen() {
                     </View>
                 </View>
             </View>
-            <BottomModal/>
+            <ThemeModal isVisible={isModalVisible} onModalClose={modalClose}/>
         </View>
     )
 }

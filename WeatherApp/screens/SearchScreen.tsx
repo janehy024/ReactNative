@@ -10,7 +10,7 @@ import { NetErrorToast } from "../components/ErrorToast";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useLocation } from "../hooks/useLocation";
 
-function SearchScreen({navigation}: {navigation: any}) {
+function SearchScreen() {
 
     const { allLocations, loading:locationLoading, error:locationError, addLocation, deleteLocation } = useLocation();
     const { themeColor } = useTheme();
@@ -31,6 +31,9 @@ function SearchScreen({navigation}: {navigation: any}) {
     },[locationError]);
 
     useEffect(() => {
+        if(inputKeyWord === '')
+            return;
+
         const search = async() => {
             const data = await SearchAPI(inputKeyWord);
 
@@ -43,6 +46,12 @@ function SearchScreen({navigation}: {navigation: any}) {
     },[inputKeyWord]);
 
     const searchBtn = async() => {
+
+        if(inputKeyWord === ''){
+            setSearchLocations([]);
+            return;
+        }
+            
         const data = await SearchAPI(inputKeyWord);
 
         if(data !== '검색 실패'){
@@ -51,41 +60,13 @@ function SearchScreen({navigation}: {navigation: any}) {
         else{NetErrorToast(data);}
     }
 
-    const locationList = () => {
-        const listItem = (local:LocationType) => {
-
-            return(
-                <View>
-                    <TouchableOpacity disabled={local.type === 1 ? true : false} onPress={() => { setTitle('삭제'); setLocation(local); modalOpen();}}> 
-                        <View style={{height:70, backgroundColor:'#DBEA8D', paddingVertical:10, paddingHorizontal:20, borderRadius:10}}>
-                            <View style={{flex:1, flexDirection:'row', alignItems:'center'}}>
-                                <Icon name={local.type === 0 ?'location-outline' : 'navigate-outline'} color={themeColor.text} size={20} style={{marginRight:20,}}/>
-                                <View style={{flex:1,}}>
-                                    <Text style={{fontSize:20, fontWeight:'bold'}} >{local.address_main}</Text>
-                                    <Text style={{fontSize:15, fontWeight:'400'}} >{local.address_sub}</Text>
-                                </View>
-                            </View>
-                        </View>
-                    </TouchableOpacity>
-                </View>  
-            )
-        }
-
-        return (
-            <FlatList
-                data={allLocations}
-                renderItem={({item}) => <View style={{marginBottom:7}}>{listItem(item)}</View>}
-            />
-        )
-    }
-
     const searchList = () => {
         const listItem = (item:string) => {
             const newLocation = {id: -1, latitude: 0, longitude: 0, address_main:item, address_sub:'', type: 0 };
 
             return(
-                <View style={{marginVertical:5}}>
-                    <TouchableOpacity onPress={()=>{setTitle('추가'); setLocation(newLocation); modalOpen();}}>
+                <View style={{}}>
+                    <TouchableOpacity onPress={()=>{setTitle('추가'); setLocation(newLocation); modalOpen();}} style={{paddingVertical:13,}}>
                         <Text style={{color:themeColor.text}}>{item}</Text>
                     </TouchableOpacity>
                 </View>
@@ -93,7 +74,7 @@ function SearchScreen({navigation}: {navigation: any}) {
         }
 
         return (
-            <View style={{flex:1, backgroundColor:themeColor.bottomModal, borderRadius:20, padding:20}}>
+            <View style={{flex:1, paddingHorizontal:5}}>
                 <FlatList 
                     data={searchLocations}
                     renderItem={({item}) => listItem(item)}
@@ -119,39 +100,28 @@ function SearchScreen({navigation}: {navigation: any}) {
 
     if(locationLoading){
         return(
-            <View style={{flex:1, backgroundColor: themeColor.background, justifyContent: 'center', alignItems:'center'}}>
+            <View style={{flex:1, backgroundColor: themeColor.mainBackground, justifyContent: 'center', alignItems:'center'}}>
                 <ActivityIndicator style={{alignItems:'center'}} size="small" color="#cad48eff"/>
             </View>
         )
     }
 
     return (
-        <View style={{flex:1, backgroundColor: themeColor.background, paddingTop:10 }}>
-            <View style={{flex: 0.2, alignItems:'flex-end', justifyContent:'flex-end', marginRight:25,}}>
-                <TouchableOpacity style={{ alignItems: 'center', padding:5, paddingRight:0}} onPress={() => navigation.goBack()}>
-                    <Icon name={'chevron-forward'} color={themeColor.text} size={20} />
-                </TouchableOpacity>
-            </View>
-            <View style={{flex:3, padding: 25,}}>
-                <View style={{flex:0.5, justifyContent:'flex-end'}}>
-                    <Text style={{fontSize:33, fontWeight:'bold', color:themeColor.text}}>검색</Text>
+        <View style={{flex:1, backgroundColor: themeColor.mainBackground,}}>
+            <View style={{flex:1, padding: 15}}>
+                <View style={{marginBottom:10, flexDirection:'row', }}>
+                    <View style={[styles.searchBar,{backgroundColor:themeColor.searchBarColor}]}>
+                        <Icon name={'search'} color={themeColor.text} size={20} />
+                        <TextInput style={{flex:1, color:themeColor.text}} value={inputKeyWord} onChangeText={(value)=>setInputKeyWord(value)} onSubmitEditing={searchBtn}></TextInput>
+                    </View>
+                    {inputKeyWord !== '' ? 
+                        <TouchableOpacity style={{justifyContent:'center', backgroundColor:'#2e3341ff', borderRadius:10, marginRight:3, marginLeft:5, paddingHorizontal:8,}} onPress={searchCancle}>
+                            <Text style={{textAlign:'center', color:'white'}}>취소</Text>
+                        </TouchableOpacity> 
+                        : null}
                 </View>
-                <View style={{flex:2, marginTop:30, }}>
-                    <View style={{marginBottom:20, flexDirection:'row', }}>
-                        <View style={{flex:1, backgroundColor:themeColor.bottomModal, borderRadius:20, paddingHorizontal:20, flexDirection:'row', alignItems: 'center'}}>
-                            <Icon name={'search'} color={themeColor.text} size={20} />
-                            <TextInput style={{flex:1, color:themeColor.text}} value={inputKeyWord} onChangeText={(value)=>setInputKeyWord(value)} onSubmitEditing={searchBtn}></TextInput>
-                        </View>
-                        {inputKeyWord !== '' ? 
-                            <TouchableOpacity style={{justifyContent:'center', backgroundColor:'#DBEA8D', borderRadius:18,margin:3, marginLeft:8, paddingHorizontal:8,}} onPress={searchCancle}>
-                                <Text style={{textAlign:'center'}}>취소</Text>
-                            </TouchableOpacity> 
-                            : null}
-                        
-                    </View>
-                    <View style={{flex:1}}>
-                        { inputKeyWord === '' ? locationList() : searchList() }
-                    </View>
+                <View style={{flex:1}}>
+                    {searchList()}
                 </View>
             </View>
             <Toast/>
@@ -159,5 +129,15 @@ function SearchScreen({navigation}: {navigation: any}) {
         </View>
     )
 }
+
+const styles = StyleSheet.create({
+    searchBar: {
+        flex:1,
+        borderRadius:3, 
+        paddingHorizontal:20, 
+        flexDirection:'row', 
+        alignItems: 'center'
+    },
+});
 
 export default SearchScreen;

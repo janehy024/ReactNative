@@ -16,7 +16,7 @@ function InitScreen() {
     else {
       try {
         const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
           console.log("위치 정보 권한이 허용되었습니다.");
@@ -47,13 +47,12 @@ function InitScreen() {
   }, []);
 
   return (
-    <SafeAreaView style={{flex: 1, backgroundColor:themeColor.background}}>
-      <StatusBar barStyle={themeColor.statusbar as 'light-content' | 'dark-content'} backgroundColor={'transparent'} translucent={true}/>
-        <View style={{flex:1, marginTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,}}>
-          <StackNavigation/>
-        </View>
+    <SafeAreaView style={{flex: 1, backgroundColor:themeColor.mainBackground}}>
+      {/* <StatusBar barStyle={themeColor.statusbar as 'light-content' | 'dark-content'} backgroundColor={'transparent'} translucent={true}/> */}
+      <View style={{flex:1}}>
+        <StackNavigation/>
+      </View>
     </SafeAreaView>
-   
   );
 }
 

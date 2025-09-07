@@ -66,6 +66,7 @@ export function WeatherAPI (dx: number, dy: number) {
             console.log(`baseDate: ${baseDate}, baseTime: ${baseTime}`);
 
             const url = `${ENDPONINT}/getUltraSrtNcst?serviceKey=${SERVICEKEY}&pageNo=1&numOfRows=200&dataType=JSON&base_date=${baseDate}&base_time=${baseTime}&nx=${dx}&ny=${dy}`;
+            
             const response = await axios.get(url);
             const data = response.data.response.body.items.item;
 
