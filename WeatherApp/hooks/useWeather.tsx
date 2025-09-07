@@ -3,27 +3,38 @@ import { useLocation } from './useLocation';
 import ConverterToXY from '../utils/ConvertToXY';
 import {WeatherAPI} from '../utils/WeatherApi';
 import { LocalItem } from '../types/WetherItem';
+import WeatherVideoApi from "../utils/WeatherVideoApi";
 
 interface WeatherContextType {
     allWeather:LocalItem[],
     error: string,
     isLoading: boolean,
-    onReset: ()=>void
+    onReset: ()=>void,
+    weatherVideoItem: string[]
 }
 
 const WeatherContext = createContext<WeatherContextType | null>(null);
 
 export const WeatherPrvider = ({ children }:{ children: ReactNode }) => {
 
-    const weatherSet:LocalItem = { location:{id:-1, latitude:-1, longitude:-1, address_main:'', address_sub:'', type:-1},  currentWeather: {time:'', item:{['']:''}}, hourlyWeather:[], min:'-1', max:'-1'}
+    const weatherSet:LocalItem = { location:{id:-1, latitude:-1, longitude:-1, address_main:'', address_sub:'', type:-1},  currentWeather: {time:'', item:{['']:''}}, hourlyWeather:[], weekWeather:[]}
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [allWeather, setAllWeather] = useState<LocalItem[]>([]);
     const { allLocations, } = useLocation();
     const [reset, setReset] = useState(false);
+    const [weatherVideoItem, setWeatherVidoeItem] = useState<string[]>([]);
 
     useEffect(() => {
+        const getvideo = async() => {
+            const data = await WeatherVideoApi();
+            if(data)
+                setWeatherVidoeItem(data)
+        }
+
+        getvideo();
         GetAllWeather();
+        console.log(weatherVideoItem);
     },[allLocations])
 
     useEffect(() => {
@@ -60,15 +71,15 @@ export const WeatherPrvider = ({ children }:{ children: ReactNode }) => {
 
         try {
             const { x, y } = ConverterToXY(location.latitude, location.longitude);
-            const {current, hourly} = await WeatherAPI(x, y);
+            const {current, hourly, week} = await WeatherAPI(x, y);
 
-            if(current && hourly){
+            if(current && hourly && week){
                 // // 최대값 구하기
                 // const max = hourly.reduce((prev, curr) => {const a = prev.category});
                 // // 최저값 구하기
                 // const min = hourly.reduce((prev, curr) => (prev.tempValue < curr.tempValue ? prev : curr));
 
-                const local:LocalItem = { location:location,  currentWeather: current, hourlyWeather:hourly, min:'0', max:'0'}
+                const local:LocalItem = { location:location,  currentWeather: current, hourlyWeather:hourly, weekWeather: week}
                 // setWeather(local);
                 setError('');
                 return local;
@@ -90,7 +101,7 @@ export const WeatherPrvider = ({ children }:{ children: ReactNode }) => {
         setReset(true);
     }
 
-    const value = { allWeather, error, isLoading, onReset};
+    const value = { allWeather, error, isLoading, onReset, weatherVideoItem};
 
     return (
         <WeatherContext.Provider value={value}>

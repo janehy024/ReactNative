@@ -18,7 +18,7 @@ function BottomNavigation() {
 
     return (
         <Stack.Navigator initialRouteName='main' screenOptions={{headerShown: false, }} >
-            <Stack.Screen name='main' component={HomeScreen} options={{animation:'none'}}/>
+            <Stack.Screen name='main' component={HomeScreen} options={{animation:'none'}} initialParams={{ naviOffset: 0 }}/>
             <Stack.Screen name='report' component={ReportNavigation} options={{animation:'none', headerShown:false}}/>
             <Stack.Screen name='earthquake' component={EarthquakeScreen} options={{animation:'none', headerShown:false}}/>
         </Stack.Navigator>

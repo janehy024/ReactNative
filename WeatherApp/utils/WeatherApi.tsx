@@ -61,7 +61,6 @@ export function WeatherAPI (dx: number, dy: number) {
 
     const currentWeather = async() => {
         try{
-
             const {baseDate, baseTime} = getCurrentBaseDateTime();
             console.log(`baseDate: ${baseDate}, baseTime: ${baseTime}`);
 
@@ -163,11 +162,80 @@ export function WeatherAPI (dx: number, dy: number) {
         }
     }
 
+    const weekWeather = async() => {
+        try {
+
+            var baseDate = now.toISOString().slice(0, 10).replace(/-/g, '');
+            var baseTime = '0200'
+
+            if(hours < 2){
+                const yesterday = new Date(now);
+                baseDate = yesterday.toISOString().slice(0, 10).replace(/-/g, '');
+            }
+
+            const url = `${ENDPONINT}/getVilageFcst?serviceKey=${SERVICEKEY}&pageNo=1&numOfRows=1000&dataType=JSON&base_date=${baseDate}&base_time=${baseTime}&nx=${dx}&ny=${dy}`;
+            const response = await axios.get(url);
+            const data = response.data.response.body.items.item;
+
+            const transformForecastData = (data: any[]): WeatherForcastItem[] => {
+                // A temporary object to group data first by date, then by time.
+                const groupedByDate = {};
+
+                data.forEach(item => {
+                    const { fcstDate, fcstTime, category, fcstValue } = item;
+
+                    if(fcstTime !== '0600' && fcstTime !== '1500') return;
+
+                    // Create a new date group if it doesn't exist.
+                    if (!groupedByDate[fcstDate]) {
+                    groupedByDate[fcstDate] = {};
+                    }
+
+                    // Create a new time group within the date group if it doesn't exist.
+                    if (!groupedByDate[fcstDate][fcstTime]) {
+                    groupedByDate[fcstDate][fcstTime] = {};
+                    }
+
+                    // Add the category and value to the appropriate time group.
+                    groupedByDate[fcstDate][fcstTime][category] = fcstValue;
+                });
+
+                // Convert the grouped object into the final array of WeatherForcastItem.
+                const finalData: WeatherForcastItem[] = Object.keys(groupedByDate).map(dateKey => {
+                    const timeValues: TimeItem[] = Object.keys(groupedByDate[dateKey]).map(timeKey => {
+                        return {
+                                time: timeKey,
+                                item: groupedByDate[dateKey][timeKey],
+                            };
+                    });
+
+                    return {
+                    date: dateKey,
+                    values: timeValues,
+                    };
+                });
+
+                return finalData;
+            };
+
+            const finalData = transformForecastData(data);
+
+            console.log('weekWeather finalData',finalData);
+
+            return finalData;
+
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+
     const dayWeather = async() =>{
         const hourly = await hourlyWeather();
         const current = await currentWeather();        
+        const week = await weekWeather();
 
-        return {current, hourly};
+        return {current, hourly, week};
     }
 
     return dayWeather();

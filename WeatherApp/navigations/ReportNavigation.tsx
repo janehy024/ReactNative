@@ -6,6 +6,7 @@ import { WeatherReportScreen, PreReportScreen, } from '../screens/SpecialReportS
 import { View,TouchableOpacity,Text,StyleSheet } from 'react-native';
 import Icon from "react-native-vector-icons/Ionicons";
 
+
 const Tab = createMaterialTopTabNavigator();
 
 function ReportNavigation({navigation}:{navigation:any}) {
@@ -18,24 +19,24 @@ function ReportNavigation({navigation}:{navigation:any}) {
                 </Tab.Navigator>
             </View>
             <View style={{flex:0.3, backgroundColor:'#ecececff',flexDirection:'row'}}>
-                <TouchableOpacity style={styles.categoryBtn} onPress={()=>navigation.navigate('main')}>
+                <TouchableOpacity style={styles.categoryBtn} onPress={()=>navigation.navigate('main',{naviOffset:130})}>
                     <Icon name={'sunny'} color={'black'} size={20}/>
                     <Text style={{fontWeight:'bold', color:'black'}}>예보</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.categoryBtn} onPress={()=>navigation.navigate('main')}>
+                <TouchableOpacity style={styles.categoryBtn} onPress={()=>navigation.navigate('main',{naviOffset:1220})}>
                     <Icon name={'leaf'} color={'black'} size={20} />
                     <Text style={{fontWeight:'bold',color:'black'}}>대기질</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.categoryBtn} onPress={()=>navigation.navigate('main')}>
+                <TouchableOpacity style={styles.categoryBtn} onPress={()=>navigation.navigate('main',{naviOffset:1600})}>
                     <Icon name={'play'} color={'black'} size={20} />
                     <Text style={{fontWeight:'bold', color:'black'}}>영상</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.categoryBtnActive}>
-                    <Icon name={'play'} color={'black'} size={20} />
+                <TouchableOpacity style={styles.categoryBtnActive} onPress={()=>navigation.navigate('report')}>
+                    <Icon name={'alert-circle-outline'} color={'black'} size={20} />
                     <Text style={{fontWeight:'bold', color:'black'}}>특보</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.categoryBtn}>
-                    <Icon name={'play'} color={'black'} size={20} />
+                <TouchableOpacity style={styles.categoryBtn} onPress={()=>navigation.navigate('earthquake')}>
+                    <Icon name={'earth'} color={'black'} size={20} />
                     <Text style={{fontWeight:'bold', color:'black'}}>지진</Text>
                 </TouchableOpacity>
             </View>
@@ -48,8 +49,12 @@ const styles = StyleSheet.create({
         flex:1,justifyContent:'center', alignItems:'center'
     },
     categoryBtnActive:{
-        flex:1,justifyContent
-        :'center', alignItems:'center', backgroundColor:'#b2cefa96',borderRadius:5,margin:3
+        flex:1,
+        justifyContent:'center', 
+        alignItems:'center', 
+        backgroundColor:'#b2cefa96',
+        borderRadius:5,
+        // padding:3
     },
 });
 

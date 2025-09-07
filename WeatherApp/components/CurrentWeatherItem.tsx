@@ -5,7 +5,7 @@ import { LocalItem, WeatherForcastItem} from '../types/WetherItem';
 import { useWeather } from "../hooks/useWeather";
 import Ionicons from "react-native-vector-icons/Ionicons"; // 아이콘 라이브러리
 
-function CurrentWeatherItem({isScrollHalf, weather, currentIndex, setForcast }:{isScrollHalf:boolean, weather: LocalItem, currentIndex:number, setForcast:(forcast: WeatherForcastItem[])=>void}){
+function CurrentWeatherItem({isScrollHalf, weather, currentIndex, setForcast }:{isScrollHalf:boolean, weather: LocalItem, currentIndex:number, setForcast:(forcast: LocalItem)=>void}){
 
     const { themeColor } = useTheme();
     const { isLoading } = useWeather();
@@ -14,7 +14,7 @@ function CurrentWeatherItem({isScrollHalf, weather, currentIndex, setForcast }:{
     useEffect(() => {
         if(weather.location.id!==currentIndex) return;
 
-        setForcast(weather.hourlyWeather);
+        setForcast(weather);
 
     }, [currentIndex]);
 
@@ -53,7 +53,7 @@ function CurrentWeatherItem({isScrollHalf, weather, currentIndex, setForcast }:{
                     <Text style={{fontSize:18, fontWeight:'500', color:'#ffffff', marginLeft:10}}>{location.address_main} {location.address_sub}</Text>
                 </View>
                 <Text style={{fontSize:80, fontWeight:'500', marginVertical:0, color:'#ffffff'}}>{currentT1H}˚</Text>
-                <Text style={{fontSize:15, fontWeight:'400' ,color:'#ffffff'}}>최저: {weather? weather.min : ''}˚   최대: {weather? weather.max : ''}˚ </Text>
+                <Text style={{fontSize:15, fontWeight:'400' ,color:'#ffffff'}}>최저: {weather? weather.weekWeather[0].values[1].item['TMN'] : ''}˚   최대: {weather? weather.weekWeather[0].values[0].item['TMX'] : ''}˚ </Text>
             </View>
 
             <View style={{flex:1, flexDirection:'row', justifyContent:'center', alignItems:'center', marginBottom:10}}>

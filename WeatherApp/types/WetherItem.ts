@@ -22,8 +22,9 @@ export interface LocalItem {
     location: LocationType,
     currentWeather: TimeItem,
     hourlyWeather: WeatherForcastItem[],
-    min: string,
-    max: string,
+    weekWeather: WeatherForcastItem[],
+    // min: string,
+    // max: string,
 }
 
 export interface HourlyWeatherItem {

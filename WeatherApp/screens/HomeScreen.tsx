@@ -10,11 +10,13 @@ import CurrentWeatherItem from "../components/CurrentWeatherItem";
 import WeatherScrollItem from "../components/WeatherScrollItem";
 import { useWeather } from "../hooks/useWeather";
 
-function HomeScreen({navigation}:{navigation:any}) {
+function HomeScreen({route, navigation}:{route :any, navigation:any}) {
 
+    const { naviOffset } = route.params;
     const { themeColor } = useTheme();
     const { loading:locationLoading, error:locationError } = useLocation();
     const [forcast, setForcast] = useState<WeatherForcastItem[]>([]);
+    const [week, setWeek] = useState<WeatherForcastItem[]>([]);
 
     const [isScrollHalf, setScrollHalf] = useState(false);
     const [scrollPercentage, setScrollPercentage] = useState(0);
@@ -29,6 +31,13 @@ function HomeScreen({navigation}:{navigation:any}) {
     const flatListRef = useRef<FlatList>(null);
 
     useEffect(() => {
+        if(naviOffset === 0) return;
+
+        setScrollHalf(true);
+        setOffset(naviOffset);
+    },[naviOffset])
+
+    useEffect(() => {
         if(locationError !== '')
             NetErrorToast(locationError);
         else if(weatherError !== '')
@@ -38,8 +47,9 @@ function HomeScreen({navigation}:{navigation:any}) {
 
     },[locationError, weatherError]);
 
-    const scrollForcast = useCallback((forcast: WeatherForcastItem[]) => {
-        setForcast(forcast);
+    const scrollForcast = useCallback((forcast: LocalItem) => {
+        setForcast(forcast.hourlyWeather);
+        setWeek(forcast.weekWeather);
     },[]);
 
     useEffect(() => {
@@ -144,7 +154,7 @@ function HomeScreen({navigation}:{navigation:any}) {
                <ScrollView style={{flex:1, borderTopLeftRadius:15, borderTopRightRadius:15, paddingTop:10}} showsVerticalScrollIndicator={false} onScroll={onScrollViewScroll} contentOffset={{x:0, y:offset}} onMomentumScrollEnd={()=>setScrollBtn(false)}>
                     {!isScrollHalf?  currentWeatherList(): <View style={{height:160}}></View>}
                     <View style={{flex:1}}>
-                        <WeatherScrollItem weather={forcast}/>
+                        <WeatherScrollItem weather={forcast} week={week}/>
                     </View>
                 </ScrollView>
             </View>
@@ -154,20 +164,20 @@ function HomeScreen({navigation}:{navigation:any}) {
                     <Icon name={'sunny'} color={'black'} size={20}/>
                     <Text style={{fontWeight:'bold', color:'black'}}>예보</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={scrollPercentage >=65 && scrollPercentage < 95 ? styles.categoryBtnActive : styles.categoryBtn} onPress={()=>{setOffset(930); setScrollBtn(true);}}>
+                <TouchableOpacity style={scrollPercentage >=65 && scrollPercentage < 95 ? styles.categoryBtnActive : styles.categoryBtn} onPress={()=>{setOffset(1220); setScrollBtn(true);}}>
                     <Icon name={'leaf'} color={'black'} size={20} />
                     <Text style={{fontWeight:'bold',color:'black'}}>대기질</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={scrollPercentage >=95 ? styles.categoryBtnActive : styles.categoryBtn} onPress={()=>{setOffset(1500); setScrollBtn(true);}}>
+                <TouchableOpacity style={scrollPercentage >=95 ? styles.categoryBtnActive : styles.categoryBtn} onPress={()=>{setOffset(1600); setScrollBtn(true);}}>
                     <Icon name={'play'} color={'black'} size={20} />
                     <Text style={{fontWeight:'bold', color:'black'}}>영상</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={scrollPercentage >=95 ? styles.categoryBtnActive : styles.categoryBtn} onPress={()=>navigation.navigate('report')}>
-                    <Icon name={'play'} color={'black'} size={20} />
+                <TouchableOpacity style={styles.categoryBtn} onPress={()=>navigation.navigate('report')}>
+                    <Icon name={'alert-circle-outline'} color={'black'} size={20} />
                     <Text style={{fontWeight:'bold', color:'black'}}>특보</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={scrollPercentage >=95 ? styles.categoryBtnActive : styles.categoryBtn} onPress={()=>navigation.navigate('earthquake')}>
-                    <Icon name={'play'} color={'black'} size={20} />
+                <TouchableOpacity style={styles.categoryBtn} onPress={()=>navigation.navigate('earthquake')}>
+                    <Icon name={'earth'} color={'black'} size={20} />
                     <Text style={{fontWeight:'bold', color:'black'}}>지진</Text>
                 </TouchableOpacity>
             </View>
@@ -195,11 +205,17 @@ const styles = StyleSheet.create({
 
     },
     categoryBtn:{
-        flex:1,justifyContent:'center', alignItems:'center'
+        flex:1,
+        justifyContent:'center', 
+        alignItems:'center'
     },
     categoryBtnActive:{
-        flex:1,justifyContent
-        :'center', alignItems:'center', backgroundColor:'#b2cefa96',borderRadius:5,margin:3
+        flex:1,
+        justifyContent:'center', 
+        alignItems:'center', 
+        backgroundColor:'#b2cefa96',
+        borderRadius:5,
+        padding:3
     },
     backgroundImage: {
         flex: 1,
