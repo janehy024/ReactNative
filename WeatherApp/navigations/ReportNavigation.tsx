@@ -1,10 +1,9 @@
 import React from 'react';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-import HomeScreen from '../screens/HomeScreen';
-import CustomTabBar from '../components/CustomTabBar';
 import { WeatherReportScreen, PreReportScreen, } from '../screens/SpecialReportScreen';
 import { View,TouchableOpacity,Text,StyleSheet } from 'react-native';
 import Icon from "react-native-vector-icons/Ionicons";
+import { CustomReportTabBar } from '../components/CustomTabBar';
 
 
 const Tab = createMaterialTopTabNavigator();
@@ -13,7 +12,7 @@ function ReportNavigation({navigation}:{navigation:any}) {
     return (
         <View style={{flex:1}}>
             <View style={{flex:3}}>
-                <Tab.Navigator initialRouteName='WeatherReport'>
+                <Tab.Navigator initialRouteName='WeatherReport' tabBar={props=> <CustomReportTabBar {...props}/>} screenOptions={{ tabBarStyle: { display: 'none' }, swipeEnabled:false}}>
                     <Tab.Screen name="WeatherReport" component={WeatherReportScreen} options={{ title: '기상특보' }}/>
                     <Tab.Screen name="PreReport" component={PreReportScreen} options={{ title: '예비특보' }}/>
                 </Tab.Navigator>

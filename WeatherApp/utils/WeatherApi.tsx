@@ -1,11 +1,7 @@
 import axios from 'axios';
 import { WeatherForcastItem,TimeItem  } from '../types/WetherItem';
-import { Alert } from 'react-native';
 
 export function WeatherAPI (dx: number, dy: number) {
-
-    // Alert.alert(`API dx: ${dx}, dy: ${dy}`);
-
     const SERVICEKEY = 'Zw5PZi5jkTheyqiwlrSwO%2Br8qi8nK90qqYKz2Am7m9usYgGFIEcY26pgB%2BYgEvXeSb2w4UyF0avYYkVDVd9QSA%3D%3D';
     const ENDPONINT = 'http://apis.data.go.kr/1360000/VilageFcstInfoService_2.0';
 
@@ -118,6 +114,9 @@ export function WeatherAPI (dx: number, dy: number) {
 
                 data.forEach(item => {
                     const { fcstDate, fcstTime, category, fcstValue } = item;
+
+                    if(data[data.length-1].fcstDate === fcstDate)
+                        return;
 
                     // Create a new date group if it doesn't exist.
                     if (!groupedByDate[fcstDate]) {
@@ -239,8 +238,4 @@ export function WeatherAPI (dx: number, dy: number) {
     }
 
     return dayWeather();
-}
-
-export function DayWeather() {
-
 }

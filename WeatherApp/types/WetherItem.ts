@@ -8,6 +8,12 @@ export interface WeatherForcastItem{
     values: TimeItem[]
 }
 
+export interface AirItem{
+    pm10Value:number,
+    pm25Value:number,
+    o3Value: number
+}
+
 export interface LocationType {
     id:number,
     latitude: number,
@@ -23,26 +29,5 @@ export interface LocalItem {
     currentWeather: TimeItem,
     hourlyWeather: WeatherForcastItem[],
     weekWeather: WeatherForcastItem[],
-    // min: string,
-    // max: string,
-}
-
-export interface HourlyWeatherItem {
-    baseDate: string,
-    baseTime: string,
-    category: string,
-    fcstDate: string,
-    fcstTime: number,
-    fcstValue: string,
-    nx: number,
-    ny: number,
-}
-
-export interface CurrentyWeatherItem {
-    baseDate: string,
-    baseTime: string,
-    category: string,
-    nx: number,
-    ny: number,
-    obsrValue: string,
+    air: AirItem,
 }

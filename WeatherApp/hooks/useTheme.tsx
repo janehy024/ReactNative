@@ -41,7 +41,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     }, [themeMode, systemColorScheme]);
 
     const themeColor: ThemeColorType = {
-        mainBackground: isDarkMode? '#000000' : '#fcfcfcff' ,
+        mainBackground: isDarkMode? '#000000' : '#f8f9fa' ,
         text: isDarkMode? 'white' : 'black',
         statusbar: isDarkMode? 'light-content' : 'dark-content',
         modalBackground: isDarkMode? '#1e222cff' : '#f8f9fa',
@@ -50,7 +50,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
         modalBorderColor: isDarkMode ? '#2e3341ff' : '#e0e0e0ff',
         tabBarColor: isDarkMode ? '#2e3341ff' : '#35568C',
         searchBarColor:isDarkMode ? '#646464ff':'#ecececff',
-        forcastDayBtnColor: isDarkMode? 'black' : '#d8d8d8ff'
+        forcastDayBtnColor: isDarkMode? 'black' : '#d8d8d8ff',
     }
 
     const setAppTheme = useCallback(async(mode:string) => {

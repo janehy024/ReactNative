@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useState, useRef, useCallback  } from "react";
-import { View, Text, ImageBackground, StyleSheet, FlatList, TouchableOpacity, Alert, TextInput, Animated, ActivityIndicator, ViewToken, ScrollView, Dimensions } from 'react-native';
+import { View, Text, ImageBackground, StyleSheet, FlatList, TouchableOpacity, Alert, TextInput, Animated, ActivityIndicator, ViewToken, ScrollView, Dimensions, Image } from 'react-native';
 import { useTheme } from "../hooks/useTheme";
 import { useLocation } from "../hooks/useLocation";
 import Toast from "react-native-toast-message";
@@ -13,10 +13,11 @@ import { useWeather } from "../hooks/useWeather";
 function HomeScreen({route, navigation}:{route :any, navigation:any}) {
 
     const { naviOffset } = route.params;
-    const { themeColor } = useTheme();
+    const { themeMode } = useTheme();
     const { loading:locationLoading, error:locationError } = useLocation();
     const [forcast, setForcast] = useState<WeatherForcastItem[]>([]);
     const [week, setWeek] = useState<WeatherForcastItem[]>([]);
+    const [air, setAir] = useState({pm10Value:-1, pm25Value:-1, o3Value: -1});
 
     const [isScrollHalf, setScrollHalf] = useState(false);
     const [scrollPercentage, setScrollPercentage] = useState(0);
@@ -24,7 +25,7 @@ function HomeScreen({route, navigation}:{route :any, navigation:any}) {
     const [offset, setOffset] = useState(0); // 현재 페이지 인덱스
     const [currentIndex, setCurrentIndex] = useState(-1); // 현재 페이지 인덱스
 
-    const currenHeight = isScrollHalf ? 130 : 350;
+    const currenHeight = isScrollHalf ? 130 : 580;
     const { width: SCREEN_WIDTH,} = Dimensions.get('window');
     const scrollX = useRef(new Animated.Value(0)).current;
     const { allWeather, error:weatherError} = useWeather();
@@ -50,6 +51,7 @@ function HomeScreen({route, navigation}:{route :any, navigation:any}) {
     const scrollForcast = useCallback((forcast: LocalItem) => {
         setForcast(forcast.hourlyWeather);
         setWeek(forcast.weekWeather);
+        setAir(forcast.air);
     },[]);
 
     useEffect(() => {
@@ -125,12 +127,12 @@ function HomeScreen({route, navigation}:{route :any, navigation:any}) {
                     showsHorizontalScrollIndicator={false}
                     onMomentumScrollEnd={handleScroll}
                 />
-                <View style={styles.indicatorContainer}>
+                <View style={[styles.indicatorContainer, isScrollHalf && {bottom:15}]}>
                     {allWeather.map((_, index) => {
                         return (
                             <View
                             key={index}
-                            style={ [styles.dot, (index === currentIndex) && styles.activeDot ]}
+                            style={ [styles.dot, (index === currentIndex) && styles.activeDot]}
                             />
                         );
                     })}
@@ -141,44 +143,44 @@ function HomeScreen({route, navigation}:{route :any, navigation:any}) {
 
     if(locationLoading){
         return(
-            <ImageBackground source={require('../assets/basic_background.jpg')} style={{flex:1, justifyContent: 'center', alignItems:'center'}}>
+            <ImageBackground source={themeMode === '다크 모드' ? require('../assets/dark_background.jpg') : require('../assets/basic_background.jpg')} style={{flex:1, justifyContent: 'center', alignItems:'center'}}>
                 <ActivityIndicator style={{alignItems:'center'}} size='large' color="#fcfcfcff"/>
             </ImageBackground>
         )
     }
 
     return (
-        <ImageBackground source={require('../assets/basic_background.jpg')} resizeMode="cover" style={styles.backgroundImage} >
+        <ImageBackground source={ themeMode === '다크 모드' ? require('../assets/dark_background.jpg') : require('../assets/basic_background.jpg')} resizeMode="cover" style={styles.backgroundImage} >
             <View style={{flex:3, marginTop:15, marginBottom:0, }}>
                 {isScrollHalf? currentWeatherList(): null}
                <ScrollView style={{flex:1, borderTopLeftRadius:15, borderTopRightRadius:15, paddingTop:10}} showsVerticalScrollIndicator={false} onScroll={onScrollViewScroll} contentOffset={{x:0, y:offset}} onMomentumScrollEnd={()=>setScrollBtn(false)}>
                     {!isScrollHalf?  currentWeatherList(): <View style={{height:160}}></View>}
                     <View style={{flex:1}}>
-                        <WeatherScrollItem weather={forcast} week={week}/>
+                        <WeatherScrollItem weather={forcast} week={week} air={air}/>
                     </View>
                 </ScrollView>
             </View>
             <Toast/>
-            <View style={{flex:0.3, backgroundColor:'#ecececff',flexDirection:'row'}}>
-                <TouchableOpacity style={ isScrollHalf && scrollPercentage < 65 ? styles.categoryBtnActive :styles.categoryBtn} onPress={()=>{setOffset(130); setScrollBtn(true);}}>
-                    <Icon name={'sunny'} color={'black'} size={20}/>
-                    <Text style={{fontWeight:'bold', color:'black'}}>예보</Text>
+            <View style={{flex:0.3, backgroundColor:'#f3f3f3ff',flexDirection:'row'}}>
+                <TouchableOpacity style={ isScrollHalf && scrollPercentage < 65 ? styles.categoryBtnActive :styles.categoryBtn} onPress={()=>{setOffset(130); setScrollBtn(true); setScrollHalf(true);}}>
+                    <Image source={require('../assets/forcast_btn_icon.png')} style={{height:30, width:30}}/>
+                    <Text style={{color:'black',fontSize:11}}>예보</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={scrollPercentage >=65 && scrollPercentage < 95 ? styles.categoryBtnActive : styles.categoryBtn} onPress={()=>{setOffset(1220); setScrollBtn(true);}}>
-                    <Icon name={'leaf'} color={'black'} size={20} />
-                    <Text style={{fontWeight:'bold',color:'black'}}>대기질</Text>
+                    <Image source={require('../assets/air_btn_icon.png')} style={{height:30, width:30}}/>
+                    <Text style={{fontSize:11,color:'black'}}>대기질</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={scrollPercentage >=95 ? styles.categoryBtnActive : styles.categoryBtn} onPress={()=>{setOffset(1600); setScrollBtn(true);}}>
-                    <Icon name={'play'} color={'black'} size={20} />
-                    <Text style={{fontWeight:'bold', color:'black'}}>영상</Text>
+                    <Image source={require('../assets/video_btn_icon.png')} style={{height:30, width:30}}/>
+                    <Text style={{fontSize:11, color:'black'}}>영상</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.categoryBtn} onPress={()=>navigation.navigate('report')}>
-                    <Icon name={'alert-circle-outline'} color={'black'} size={20} />
-                    <Text style={{fontWeight:'bold', color:'black'}}>특보</Text>
+                    <Image source={require('../assets/report_btn_icon.png')} style={{height:30, width:30}}/>
+                    <Text style={{fontSize:11, color:'black'}}>특보</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.categoryBtn} onPress={()=>navigation.navigate('earthquake')}>
-                    <Icon name={'earth'} color={'black'} size={20} />
-                    <Text style={{fontWeight:'bold', color:'black'}}>지진</Text>
+                    <Image source={require('../assets/earthquake_btn_icon.png')} style={{height:30, width:30}}/>
+                    <Text style={{fontSize:11, color:'black'}}>지진</Text>
                 </TouchableOpacity>
             </View>
         </ImageBackground>
@@ -189,7 +191,7 @@ const styles = StyleSheet.create({
     indicatorContainer: {
         flexDirection: 'row',
         position: 'absolute',
-        bottom: 20,
+        bottom: 70,
         alignSelf: 'center',
     },
     dot: {

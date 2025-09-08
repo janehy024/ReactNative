@@ -1,4 +1,4 @@
-import React,{useState} from 'react';
+import React,{useEffect, useState} from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import Icon from "react-native-vector-icons/Ionicons"; // 아이콘 라이브러리
 import { useWeather } from '../hooks/useWeather';
@@ -6,8 +6,7 @@ import { useModal } from "../hooks/useModal";
 import SettingModal from '../components/SettingModal';
 import { useTheme } from '../hooks/useTheme';
 
-
-function CustomTabBar({ state, descriptors, navigation }:{ state:any, descriptors:any, navigation :any}) {
+export function CustomMainTabBar({ state, descriptors, navigation }:{ state:any, descriptors:any, navigation :any}) {
     const { isModalVisible, modalOpen, modalClose } = useModal();
     const {onReset} = useWeather();
     const { themeColor, themeMode } = useTheme();
@@ -53,15 +52,57 @@ function CustomTabBar({ state, descriptors, navigation }:{ state:any, descriptor
                 <TouchableOpacity 
                     style={styles.settingsButton}
                     onPress={onReset}>
-                    <Icon name="refresh" size={24} color="#ffffff" />
+                    <Icon name="refresh" size={24} color="#ffffff"/>
                 </TouchableOpacity>
                 <TouchableOpacity 
                     style={styles.settingsButton}
                     onPress={modalOpen}>
-                    <Icon name="menu" size={24} color="#ffffff" />
+                    <Icon name="menu" size={24} color="#ffffff"/>
                 </TouchableOpacity>
             </View>
             <SettingModal visible={isModalVisible} onClose={modalClose} navigation={navigation}/>
+        </View>
+    );
+}
+
+export function CustomReportTabBar({ state, descriptors, navigation }:{ state:any, descriptors:any, navigation :any}){
+    const { themeColor, themeMode } = useTheme();
+
+    return (
+        <View style={[styles.tabBarContainer, {backgroundColor:'#e2edffff'}]}>
+            <View style={styles.tabsContainer}>
+                {state.routes.map((route:any, index:any) => {
+                    const { options } = descriptors[route.key];
+                    const label = options.tabBarLabel !== undefined ? options.tabBarLabel : options.title !== undefined ? options.title : route.name;
+                    const isFocused = state.index === index;
+
+                    const onPress = () => {
+                        const event = navigation.emit({
+                        type: 'tabPress',
+                        target: route.key,
+                        });
+
+                        if (!isFocused && !event.defaultPrevented) {
+                        navigation.navigate(route.name);
+                        }
+                    };
+
+                    return (
+                        <TouchableOpacity
+                            key={index}
+                            accessibilityRole="button"
+                            accessibilityState={isFocused ? { selected: true } : {}}
+                            accessibilityLabel={options.tabBarAccessibilityLabel}
+                            onPress={onPress}
+                            style={[styles.tabButton, isFocused && styles.reportActiveTabButton]}
+                        >
+                            <Text style={styles.reportTabText}>
+                                {label}
+                            </Text>
+                        </TouchableOpacity>
+                    );
+                })}
+            </View>
         </View>
     );
 }
@@ -104,10 +145,17 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#FFFFFF',
     },
+    reportTabText:{
+        fontSize: 17,
+        fontWeight: '600',
+        color: '#35568C',
+    },
+    reportActiveTabButton: {
+        borderBottomColor:'#35568C',
+        borderBottomWidth:3,
+    },
     settingsButton: {
         padding: 8,
         paddingHorizontal: 10,
     },
 });
-
-export default CustomTabBar;

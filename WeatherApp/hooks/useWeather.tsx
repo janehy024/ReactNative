@@ -4,6 +4,7 @@ import ConverterToXY from '../utils/ConvertToXY';
 import {WeatherAPI} from '../utils/WeatherApi';
 import { LocalItem } from '../types/WetherItem';
 import WeatherVideoApi from "../utils/WeatherVideoApi";
+import AirApi from '../utils/AirApi';
 
 interface WeatherContextType {
     allWeather:LocalItem[],
@@ -17,7 +18,7 @@ const WeatherContext = createContext<WeatherContextType | null>(null);
 
 export const WeatherPrvider = ({ children }:{ children: ReactNode }) => {
 
-    const weatherSet:LocalItem = { location:{id:-1, latitude:-1, longitude:-1, address_main:'', address_sub:'', type:-1},  currentWeather: {time:'', item:{['']:''}}, hourlyWeather:[], weekWeather:[]}
+    const weatherSet:LocalItem = { location:{id:-1, latitude:-1, longitude:-1, address_main:'', address_sub:'', type:-1},  currentWeather: {time:'', item:{['']:''}}, hourlyWeather:[], weekWeather:[], air:{o3Value:-1, pm10Value: -1, pm25Value: -1}}
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [allWeather, setAllWeather] = useState<LocalItem[]>([]);
@@ -34,7 +35,6 @@ export const WeatherPrvider = ({ children }:{ children: ReactNode }) => {
 
         getvideo();
         GetAllWeather();
-        console.log(weatherVideoItem);
     },[allLocations])
 
     useEffect(() => {
@@ -72,15 +72,11 @@ export const WeatherPrvider = ({ children }:{ children: ReactNode }) => {
         try {
             const { x, y } = ConverterToXY(location.latitude, location.longitude);
             const {current, hourly, week} = await WeatherAPI(x, y);
+            const  airData = await AirApi(location.address_main);
 
-            if(current && hourly && week){
-                // // 최대값 구하기
-                // const max = hourly.reduce((prev, curr) => {const a = prev.category});
-                // // 최저값 구하기
-                // const min = hourly.reduce((prev, curr) => (prev.tempValue < curr.tempValue ? prev : curr));
+            if(current && hourly && week && airData){
+                const local:LocalItem = { location:location,  currentWeather: current, hourlyWeather:hourly, weekWeather: week, air:airData}
 
-                const local:LocalItem = { location:location,  currentWeather: current, hourlyWeather:hourly, weekWeather: week}
-                // setWeather(local);
                 setError('');
                 return local;
             }

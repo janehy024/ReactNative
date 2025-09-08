@@ -1,15 +1,18 @@
 import React, { useEffect, useState,useRef, useCallback } from "react";
-import { View, Text, FlatList, ScrollView, Dimensions, StyleSheet, Image, SectionList ,TouchableOpacity, ViewToken} from 'react-native';
-import { LocalItem, LocationType, TimeItem, WeatherForcastItem } from '../types/WetherItem';
+import { View, Text, ActivityIndicator, ScrollView, Dimensions, StyleSheet, Image, SectionList ,TouchableOpacity, ViewToken} from 'react-native';
+import { AirItem, LocalItem, LocationType, TimeItem, WeatherForcastItem } from '../types/WetherItem';
 import { useTheme } from "../hooks/useTheme";
 import { useWeather } from "../hooks/useWeather";
+import { SkyIcon,getDayString } from "../utils/ChangeData";
+import Icon from "react-native-vector-icons/Ionicons"; // 아이콘 라이브러리
+import AirDataComponents from "./AirDataComponents";
 
 interface WeatherSection {
   title: string;
   data: TimeItem[]
 }
 
-function WeatherScrollItem({weather, week}:{weather:WeatherForcastItem[],week:WeatherForcastItem[]}){
+function WeatherScrollItem({weather, week, air}:{weather:WeatherForcastItem[],week:WeatherForcastItem[], air:AirItem}){
 
     if(!weather)
         return;
@@ -24,12 +27,14 @@ function WeatherScrollItem({weather, week}:{weather:WeatherForcastItem[],week:We
     const finalSections = transformToSections(weather);
 
     const [tmp, setTmp] = useState<WeatherSection[]>([]);
+    const { width: SCREEN_WIDTH, } = Dimensions.get('window');
 
     const sectionListRef = useRef<SectionList<any>>(null);
     const [activeSectionIndex, setActiveSectionIndex] = useState(0);
     const [isBtnActive, setIsBtnActive] = useState(false);
-    const { themeColor, themeMode } = useTheme();
-    const {weatherVideoItem} = useWeather();
+    const { themeColor, } = useTheme();
+    const {weatherVideoItem, isLoading} = useWeather();
+    
     // const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
     // // 컴포넌트가 마운트될 때 애니메이션을 시작하고, 언마운트될 때 정리합니다.
@@ -49,6 +54,7 @@ function WeatherScrollItem({weather, week}:{weather:WeatherForcastItem[],week:We
         setTmp(finalSections);
     }, [weather]);
 
+    
 
     const handleScrollToDate = (sectionIndex:any) => {
         setIsBtnActive(true);
@@ -80,69 +86,98 @@ function WeatherScrollItem({weather, week}:{weather:WeatherForcastItem[],week:We
     };
 
     const WeekListItem = (item: WeatherForcastItem, index:number) => {
+        const daySky = SkyIcon(item.values[1]);
+        const nightSky = SkyIcon(item.values[0]);
         const dayNumber = new Date().getDay();
-
-        const getDayString = (dayNumber: number) => {
-            switch(dayNumber){
-                case 0: return '일'; break;
-                case 1: return '월'; break;
-                case 2: return '화'; break;
-                case 3: return '수'; break;
-                case 4: return '목'; break;
-                case 5: return '금'; break;
-                case 6: return '토'; break;
-            }
-        }
 
         return (
             <View key={index} style={{height:70, flexDirection:'row', marginHorizontal:5, marginTop:0, alignItems:'center',borderBottomWidth:0.5, borderColor:'#ccc'}}>
                 <View style={{flex:1, alignContent:'center'}}>
-                    <Text style={{textAlign:'center', fontSize:18, fontWeight:'500', color:themeColor.text}}>{getDayString(dayNumber+index)}</Text>
-                    <Text style={{textAlign:'center', color:themeColor.text}}>{Number(item.date.substring(4, 6))}.{Number(item.date.substring(6, 8))}</Text>
+                    <Text style={{textAlign:'center', fontSize:16, fontWeight:'500', color:themeColor.text}}>{getDayString(dayNumber+index)}</Text>
+                    <Text style={{textAlign:'center', fontSize:13,color:themeColor.text}}>{Number(item.date.substring(4, 6))}.{Number(item.date.substring(6, 8))}</Text>
                 </View>
-                <Text style={{flex:1, textAlign:'center', color:themeColor.text}}>{item.values[1].item['SKY']}</Text>
+                 <Image source={daySky} style={{height:30, width:30}}/>
                 <Text style={{flex:1, textAlign:'center', color:themeColor.text}}>{item.values[1].item['POP']}%</Text>
-                <Text style={{flex:1, textAlign:'center', color:themeColor.text}}>{item.values[0].item['SKY']}</Text>
+                 <Image source={nightSky} style={{height:30, width:30}}/>
                 <Text style={{flex:1, textAlign:'center', color:themeColor.text}}>{item.values[0].item['POP']}%</Text>
-                <Text style={{flex:1, textAlign:'center', color:themeColor.text}}>{item.values[1].item['TMN']}˚</Text>
-                <Text style={{flex:1, textAlign:'center', color:themeColor.text}}>{item.values[0].item['TMX']}˚</Text>
+                <Text style={{flex:1, textAlign:'center', color:'#007AFF', fontWeight:'bold'}}>{item.values[1].item['TMN']}˚</Text>
+                <Text style={{flex:1, textAlign:'center', color:'red', fontWeight:'bold'}}>{item.values[0].item['TMX']}˚</Text>
             </View>
         )
     }
 
     const sectionData = (item:TimeItem) => {
+        const sky = SkyIcon(item);
+
         return (
             <View style={{width:50, margin:5, alignItems:'center', justifyContent:'center',}}>
                 <Text style={{paddingVertical:13, textAlign:'center', color:themeColor.text}}>{Number(item.time)/100}시</Text>
-                <Text style={{paddingVertical:13, textAlign:'center', color:themeColor.text}}>{item.item['SKY']}</Text>{/*하늘*/}
+                {/* <Icon style={{paddingVertical:13, textAlign:'center'}} name={sky} color={themeColor.text} size={20} /> */}
+                <Image source={sky} style={{height:30, width:30}}/>
                 <Text style={{paddingVertical:13, textAlign:'center', color:themeColor.text}}>{item.item['TMP']}˚</Text>{/*기온*/}
                 <Text style={{paddingVertical:13, textAlign:'center', color:themeColor.text}}>{item.item['POP']}%</Text>{/*강수확률*/}
-                <Text style={{paddingVertical:13, textAlign:'center', color:themeColor.text}}>{item.item['PCP']==='강수없음'? '-' : item.item['PCP']}</Text>{/*강수량*/}
+                <Text style={{paddingVertical:13, textAlign:'center', color:themeColor.text}}>{item.item['PCP']==='강수없음'? '-' : item.item['PCP'].replace('미만','')}</Text>{/*강수량*/}
                 <Text style={{paddingVertical:13, textAlign:'center', color:themeColor.text}}>{item.item['REH']}%</Text>{/*습도*/}
             </View>
         )
     }
 
     const weatherDate = (data: WeatherSection, isActive:boolean) => {
-        const month = data.title.substring(4, 6); 
-        const day = data.title.substring(6, 8);
+        const now = new Date();
+        const nowTime = now.getHours();
+        const nowDay = now.getDate();
+
+        const year = parseInt( data.title.substring(0, 4));
+        const month = parseInt( data.title.substring(4, 6)) - 1; // 월은 0부터 시작하므로 1을 빼줍니다.
+        const day = parseInt( data.title.substring(6, 8));
+        const dateObject = new Date(year, month, day);
+        const date = getDayString(dateObject.getDay());
 
         const values = week.find((item)=>item.date === data.title);
+
+        // var daySky = ''; var nightSky ='';
+
+        if(!values){ return; }
+        const daySky = SkyIcon(values.values[1]);
+        const nightSky = SkyIcon(values.values[1]);
+        
+
 
         if(isActive){
             return(
                 <View style={{flex:1, justifyContent:'center'}}>
-                    <Text style={{ flex:1, textAlign:'center', fontWeight:'bold', color:'white'}}>{month} / {day}</Text>
-                    <View style={{flex:3, backgroundColor:themeColor.modalBackground, width:150, borderRightWidth:1, borderLeftWidth:1, borderColor:'#35568C', flexDirection:'row', alignItems:'center'}}>
-                        <Text style={{flex:1,textAlign:'center', color:'#007AFF'}}>{values? values.values[1].item['TMN'] : '0'}</Text>
-                        <Text style={{flex:1,textAlign:'center', color:'red'}}>{values? values.values[0].item['TMX'] : '0'}</Text>
+                    <Text style={{ flex:1, textAlign:'center', fontWeight:'bold', color:'white'}}>{month+1}/{day}({date})</Text>
+                    <View style={{flex:3, backgroundColor:themeColor.modalBackground, width:145, borderRightWidth:1, borderLeftWidth:1, borderColor:'#35568C', flexDirection:'row', alignItems:'center'}}>
+                        {nowTime < 12 || nowDay !== day ?<View style={{flex:1}}>
+                            <Text style={{flex:1,textAlign:'center', textAlignVertical:'center', color:themeColor.text}}>오전</Text>
+                            <Image source={daySky} style={{height:30, width:30}}/>
+                        </View> : null}
+                        <View style={{flex:1, }}>
+                            <Text style={{flex:1,textAlign:'center', textAlignVertical:'center', color:themeColor.text}}>오후</Text>
+                            <Image source={nightSky} style={{height:30, width:30}}/>
+                        </View>
+                        <View style={{flex:1.2, borderColor:'#ccc', borderLeftWidth:0.5}}>
+                            <Text style={{textAlign:'center', textAlignVertical:'center', color:'#007AFF', fontWeight:'500'}}>{values? values.values[1].item['TMN'] : '0'}˚</Text>
+                            <Text style={{textAlign:'center', textAlignVertical:'center', color:'red', fontWeight:'500'}}>{values? values.values[0].item['TMX'] : '0'}˚</Text>
+                        </View>
                     </View>
                 </View>
             )
         }
 
         return(
-            <Text style={{fontWeight:'500',textAlign:'center', color:themeColor.text}}>{month} / {day}</Text>
+            <View style={{flex:1,justifyContent:'center'}}>
+                <Text style={{ fontWeight:'500',textAlign:'center', color:themeColor.text}}>{month+1}/{day}</Text>
+                <Text style={{ fontWeight:'500',textAlign:'center', color:themeColor.text}}>({date})</Text>
+            </View>
+        )
+    }
+    
+    if(isLoading){
+        return(
+            <View style={{flex:1, width:SCREEN_WIDTH, justifyContent: 'center', alignItems:'center'}}>
+                <ActivityIndicator style={{alignItems:'center'}} size="small" color="white"/>
+            </View>
         )
     }
 
@@ -205,46 +240,7 @@ function WeatherScrollItem({weather, week}:{weather:WeatherForcastItem[],week:We
                     {week.map((item,index)=>WeekListItem(item, index))}
                 </View>
             </View>
-            <View style={{marginBottom:20}}>
-                <Text style={{fontSize:18, fontWeight:'bold', margin: 10, color:themeColor.text}}>대기질 정보</Text>
-                <View style={{flex:1 ,height:120, borderColor:'#35568C', borderTopWidth:2,  borderBottomWidth:0, flexDirection:'row', paddingHorizontal:17, alignItems:'center'}}>
-                    <View style={{flex:1, marginHorizontal:5,}}>
-                        <Text style={{color:'#8a8a8aff',textAlign:'center'}}>초미세먼지</Text>
-                        <Text style={{textAlign:'center',marginVertical:4, marginBottom:10,fontWeight:'bold'}}>㎍/㎥</Text>
-                        <Text style={{height:25  ,backgroundColor:'#69bfe7ff', borderRadius:15, textAlign:'center', textAlignVertical:'center'}}>보통</Text>
-                    </View> 
-                    <View style={{flex:1, marginHorizontal:5,}}>
-                        <Text style={{color:'#8a8a8aff',textAlign:'center'}}>미세먼지</Text>
-                        <Text style={{textAlign:'center',marginVertical:4, marginBottom:10,fontWeight:'bold'}}>㎍/㎥</Text>
-                        <Text style={{height:25  ,backgroundColor:'#69bfe7ff', borderRadius:15, textAlign:'center', textAlignVertical:'center'}}>보통</Text>
-                    </View> 
-                    <View style={{flex:1, marginHorizontal:5,}}>
-                        <Text style={{color:'#8a8a8aff',textAlign:'center'}}>오존</Text>
-                        <Text style={{textAlign:'center',marginVertical:4, marginBottom:10,fontWeight:'bold'}}>ppm</Text>
-                        <Text style={{height:25  ,backgroundColor:'#69bfe7ff', borderRadius:15, textAlign:'center', textAlignVertical:'center'}}>보통</Text>
-                    </View>    
-                </View>
-            </View> 
-            <View style={{marginBottom:20}}>
-                <Text style={{fontSize:18, fontWeight:'bold', margin: 10, color:themeColor.text}}>자외선지수</Text>
-                <View style={{height:120, borderColor:'#35568C', borderTopWidth:2,  borderBottomWidth:0, flexDirection:'row', paddingHorizontal:17, alignItems:'center'}}>
-                    <View style={{flex:1, marginHorizontal:5,}}>
-                        <Text style={{color:'#8a8a8aff',textAlign:'center'}}>오늘</Text>
-                        <Text style={{textAlign:'center',marginVertical:4, marginBottom:10,fontWeight:'bold'}}></Text>
-                        <Text style={{height:25  ,backgroundColor:'#e9b832ff', borderRadius:15, textAlign:'center', textAlignVertical:'center'}}>보통</Text>
-                    </View> 
-                    <View style={{flex:1, marginHorizontal:5,}}>
-                        <Text style={{color:'#8a8a8aff',textAlign:'center'}}>내일</Text>
-                        <Text style={{textAlign:'center',marginVertical:4, marginBottom:10,fontWeight:'bold'}}></Text>
-                        <Text style={{height:25  ,backgroundColor:'#e9b832ff', borderRadius:15, textAlign:'center', textAlignVertical:'center'}}>보통</Text>
-                    </View> 
-                    <View style={{flex:1, marginHorizontal:5,}}>
-                        <Text style={{color:'#8a8a8aff',textAlign:'center'}}>모레</Text>
-                        <Text style={{textAlign:'center',marginVertical:4, marginBottom:10,fontWeight:'bold'}}></Text>
-                        <Text style={{height:25  ,backgroundColor:'#e9b832ff', borderRadius:15, textAlign:'center', textAlignVertical:'center'}}>보통</Text>
-                    </View>  
-                </View>
-            </View> 
+            <AirDataComponents air={air}/>
             <View>
                 <Text style={{fontSize:18, fontWeight:'bold', margin: 10, color:themeColor.text}}>영상</Text>
                 <View style={{height:370, borderColor:'#35568C', borderTopWidth:2,  borderBottomWidth:0, padding:10}}>
@@ -267,7 +263,7 @@ const styles = StyleSheet.create({
         justifyContent:'center',
         borderTopLeftRadius:7,
         borderTopRightRadius:7,
-        width:80,
+        width:63,
         height:100,
         backgroundColor: '#d8d8d8ff',
         margin:0.5
@@ -275,7 +271,7 @@ const styles = StyleSheet.create({
     activeButton: {
         backgroundColor: '#35568C',
         justifyContent:'flex-start',
-        width:150,
+        width:145,
         paddingTop:7,
         padding:0
 

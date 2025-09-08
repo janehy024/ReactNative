@@ -12,7 +12,7 @@ function BasicModalComponent({isVisible, title, location, onClose, onOk}:{isVisi
                     <Text style={{textAlign:'left', marginBottom:20}}>{location.address_main} {location.address_sub}을(를) {title}하시겠습니까?</Text>
                     <View style={{flexDirection:'row'}}>
                         <TouchableOpacity onPress={() => onOk()} style={styles.okBtn}>
-                            <Text>확인</Text>
+                            <Text style={{color:'white'}}>확인</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => onClose()} style={styles.cancelBtn}>
                             <Text>취소</Text>
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     },
 
     okBtn: {
-        backgroundColor: '#DBEA8D', 
+        backgroundColor: '#35568C', 
         padding:10, 
         borderRadius:10, 
         flex: 1, 
